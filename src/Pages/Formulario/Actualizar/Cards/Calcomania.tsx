@@ -1,47 +1,64 @@
-import React, { useReducer } from 'react'
-import { Calcomania } from '../../../../models/Calcomania'
+import React, { useState, useEffect } from 'react'
 import { Button, Divider, IconButton, Paper, Tooltip, Typography } from '@mui/material'
 import { Stack } from '@mui/system'
-import { InmuebleReducer } from '../Reducers/ActualizarFormReducer'
-import { Actions, State, statePayload } from '../Types/ReducerTypes'
-import { CalcomaniaForm } from '../Formularios/Calcomania'
+import { State } from '../Types/ReducerTypes'
+import { CalcomaniaForm } from '../Formularios/Calcomania/Calcomania'
 
 import WarningIcon from '@mui/icons-material/Warning';
 import EditIcon from '@mui/icons-material/Edit';
-import { Inmueble, Propietario, Recibo } from '../../../../models/Formulario'
+import { Formulario } from '../../../../models/Formulario'
+import { CalcomaniaPDF } from '../Formularios/Calcomania/CalcomaniaPDF'
 
 type CalcomaniaCardProps = {
-    formNo: number,
-    calcomania : Calcomania | undefined,
-    inmueble : Inmueble | undefined,
-    recibo : Recibo | undefined,
-    propietario : Propietario | undefined,
     icon: JSX.Element,
-    label: string
+    label: string,
+    form: Formulario,
+    handleFormChange : ( nuevo : Formulario ) => void
 }
 
-export const CalcomaniaCard : React.FC<CalcomaniaCardProps> = ({ 
-    formNo, 
-    calcomania,
-    inmueble,
-    recibo,
-    propietario,
-    icon, 
-    label }) => {
+export const CalcomaniaCard : React.FC<CalcomaniaCardProps> = ({ form, handleFormChange, icon, label }) => {
+    
+    
+    const [ state, setState ] = useState<State>(() => { return form.calcomania ? State.normal : State.unregistered; });
 
-    const initFunc = () : statePayload<Calcomania> => {
-        return !calcomania 
-            ? {state: State.unregistered, object: undefined}
-            : {state: State.normal, object: calcomania}
+    const goToNormal = () => {
+        setState(State.normal);
     }
 
-    const initialState : statePayload<Calcomania> = {state: State.unregistered, object: undefined}
+    const goToCancel = () => {
+        setState(form.calcomania ? State.normal : State.unregistered)
+    }
 
-    const [state, dispatch] = useReducer(InmuebleReducer<Calcomania>, initialState, initFunc)
+    useEffect(() => {
+        setState(form.calcomania ? State.normal : State.unregistered)
+    }, [form])
 
 
     const getBody = () => {
-        switch( state.state ){
+
+        if( !form.calcomania && state === State.normal ){
+            return (
+                <Stack
+                    spacing={2}
+                    alignItems='center'
+                >
+                    <Stack alignItems='center'>
+                        <WarningIcon sx={{fontSize: 60}} />
+                        <Typography>
+                            Aún no se ha registrado una calcomania
+                        </Typography>
+                    </Stack>
+                    <Button
+                        variant='contained'
+                        onClick={ () => setState(State.registering) } 
+                    >
+                        Registrar
+                    </Button>
+                </Stack> 
+            )
+        }
+
+        switch( state ){
             case State.unregistered:
                 return (
                     <Stack
@@ -56,7 +73,7 @@ export const CalcomaniaCard : React.FC<CalcomaniaCardProps> = ({
                         </Stack>
                         <Button
                             variant='contained'
-                            onClick={ () => dispatch({type: Actions.goregistering, payload: {state: State.registering, object: state.object}}) }
+                            onClick={ () => setState(State.registering) } 
                         >
                             Registrar
                         </Button>
@@ -65,37 +82,22 @@ export const CalcomaniaCard : React.FC<CalcomaniaCardProps> = ({
 
             case State.registering:
                 return (<CalcomaniaForm 
-                    formNo={formNo}
-                    state={state}
-                    dispatch={dispatch}
+                    form={form}
+                    handleFormChange2 ={handleFormChange}
+                    goToNormal={goToNormal}
+                    goToCancel={goToCancel}
                 />)
 
             case State.normal:
                 return (
-                    <Stack sx={{position: 'relative'}} spacing={1}>
-                        
-                        <Typography textAlign='justify'> 
-                            <strong>- Dirección: </strong>{state.object!.direccion} 
-                        </Typography>
-                                                
-                        
-                        
-                        <Tooltip title="Editar" sx={{position: 'absolute', bottom: 0, right: 0}}>
-                            <IconButton 
-                                aria-label="editar"
-                                onClick={ () => dispatch({type: Actions.goregistering, payload: {state: State.registering, object: state.object}}) }
-                            >
-                                <EditIcon />
-                            </IconButton>
-                        </Tooltip>
-                    </Stack>
+                    <CalcomaniaPDF form={ form } />
                 )
 
             default: return (<></>)
         }
     }
 
-    if( !propietario ) return(
+    if( !form.propietario ) return(
         <Stack
             spacing={2}
             alignItems='center'
@@ -109,7 +111,7 @@ export const CalcomaniaCard : React.FC<CalcomaniaCardProps> = ({
         </Stack> 
     )
 
-    if( !inmueble ) return(
+    if( !form.inmueble ) return(
         <Stack
             spacing={2}
             alignItems='center'
@@ -122,8 +124,22 @@ export const CalcomaniaCard : React.FC<CalcomaniaCardProps> = ({
             </Stack>
         </Stack> 
     )
+    
+    if( !form.obra ) return(
+        <Stack
+            spacing={2}
+            alignItems='center'
+        >
+            <Stack alignItems='center'>
+                <WarningIcon sx={{fontSize: 60}} />
+                <Typography>
+                    Es necesario registrar la obra
+                </Typography>
+            </Stack>
+        </Stack> 
+    )
 
-    if( !recibo ) return(
+    if( !form.recibo ) return(
         <Stack
             spacing={2}
             alignItems='center'

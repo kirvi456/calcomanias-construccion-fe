@@ -1,36 +1,62 @@
-import React, { useReducer } from 'react'
-import { Inmueble } from '../../../../models/Formulario'
+import React, { useEffect, useState } from 'react'
+import { Formulario } from '../../../../models/Formulario'
 import { Button, Divider, IconButton, Paper, Tooltip, Typography } from '@mui/material'
 import { Stack } from '@mui/system'
-import { InmuebleReducer } from '../Reducers/ActualizarFormReducer'
-import { Actions, State, statePayload } from '../Types/ReducerTypes'
+import { State } from '../Types/ReducerTypes'
 import { InmuebleForm } from '../Formularios/Inmueble'
 
 import WarningIcon from '@mui/icons-material/Warning';
 import EditIcon from '@mui/icons-material/Edit';
 
 type InmuebleCardProps = {
-    formNo: number,
-    inmueble : Inmueble | undefined,
     icon: JSX.Element,
-    label: string
+    label: string,
+    form: Formulario,
+    handleFormChange : ( nuevo : Formulario ) => void
 }
 
-export const InmuebleCard : React.FC<InmuebleCardProps> = ({ formNo, inmueble, icon, label }) => {
+export const InmuebleCard : React.FC<InmuebleCardProps> = ({ form, handleFormChange, icon, label }) => {
 
-    const initFunc = () : statePayload<Inmueble> => {
-        return !inmueble 
-            ? {state: State.unregistered, object: undefined}
-            : {state: State.normal, object: inmueble}
+    const [ state, setState ] = useState<State>(() => { return form.inmueble ? State.normal : State.unregistered; });
+
+    const goToNormal = () => {
+        setState(State.normal);
     }
 
-    const initialState : statePayload<Inmueble> = {state: State.unregistered, object: undefined}
+    const goToCancel = () => {
+        setState(form.inmueble ? State.normal : State.unregistered)
+    }
 
-    const [state, dispatch] = useReducer(InmuebleReducer<Inmueble>, initialState, initFunc)
+    useEffect(() => {
+        setState(form.inmueble ? State.normal : State.unregistered)
+    }, [form])
 
 
     const getBody = () => {
-        switch( state.state ){
+        
+        if( !form.inmueble && state === State.normal ){
+            return (
+                <Stack
+                    spacing={2}
+                    alignItems='center'
+                >
+                    <Stack alignItems='center'>
+                        <WarningIcon sx={{fontSize: 60}} />
+                        <Typography>
+                            Aún no se ha registrado un inmueble
+                        </Typography>
+                    </Stack>
+                    <Button
+                        variant='contained'
+                        onClick={ () => setState(State.registering) } 
+                    >
+                        Registrar
+                    </Button>
+                </Stack> 
+            )
+        }
+
+        switch( state ){
             case State.unregistered:
                 return (
                     <Stack
@@ -45,7 +71,7 @@ export const InmuebleCard : React.FC<InmuebleCardProps> = ({ formNo, inmueble, i
                         </Stack>
                         <Button
                             variant='contained'
-                            onClick={ () => dispatch({type: Actions.goregistering, payload: {state: State.registering, object: state.object}}) }
+                            onClick={ () => setState(State.registering) } 
                         >
                             Registrar
                         </Button>
@@ -54,36 +80,37 @@ export const InmuebleCard : React.FC<InmuebleCardProps> = ({ formNo, inmueble, i
 
             case State.registering:
                 return (<InmuebleForm 
-                    formNo={formNo}
-                    state={state}
-                    dispatch={dispatch}
+                    form={form}
+                    handleFormChange2 ={handleFormChange}
+                    goToNormal={goToNormal}
+                    goToCancel={goToCancel}
                 />)
 
             case State.normal:
                 return (
                     <Stack sx={{position: 'relative'}} spacing={1}>
                         <Typography textAlign='justify'> 
-                            <strong>- Dirección: </strong>{state.object!.direccion}
+                            <strong>- Dirección: </strong>{form.inmueble!.direccion}
                         </Typography>
                         <Typography> 
-                            <strong>- Finca: </strong>{state.object!.noFinca}
-                            <strong> Folio: </strong>{state.object!.folio} 
-                            <strong> Libro: </strong>{state.object!.libro} 
+                            <strong>- Finca: </strong>{form.inmueble!.noFinca}
+                            <strong> Folio: </strong>{form.inmueble!.folio} 
+                            <strong> Libro: </strong>{form.inmueble!.libro} 
                         </Typography>
                         <Typography> 
-                            <strong>- Frente: </strong>{state.object!.frente}mts
-                            <strong> Fondo: </strong>{state.object!.fondo}mts
-                            <strong> Área: </strong>{state.object!.area}mts²
+                            <strong>- Frente: </strong>{form.inmueble!.frente}mts
+                            <strong> Fondo: </strong>{form.inmueble!.fondo}mts
+                            <strong> Área: </strong>{form.inmueble!.area}mts²
                         </Typography>
                         <Typography> 
-                            <strong>- Terreno Irregular: </strong>{state.object!.irregular ? 'SI' : 'NO'}
+                            <strong>- Terreno Irregular: </strong>{form.inmueble!.irregular ? 'SI' : 'NO'}
                             
                         </Typography>
 
                         <Tooltip title="Editar" sx={{position: 'absolute', bottom: 0, right: 0}}>
                             <IconButton 
                                 aria-label="editar"
-                                onClick={ () => dispatch({type: Actions.goregistering, payload: {state: State.registering, object: state.object}}) }
+                                onClick={ () => setState(State.registering) }
                             >
                                 <EditIcon />
                             </IconButton>

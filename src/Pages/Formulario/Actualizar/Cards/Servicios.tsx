@@ -1,9 +1,8 @@
-import React, { useReducer } from 'react'
-import { Servicios } from '../../../../models/Formulario'
+import React, { useEffect, useState } from 'react'
+import { Formulario } from '../../../../models/Formulario'
 import { Button, Divider, IconButton, Paper, Tooltip, Typography } from '@mui/material'
 import { Stack } from '@mui/system'
-import { InmuebleReducer } from '../Reducers/ActualizarFormReducer'
-import { Actions, State, statePayload } from '../Types/ReducerTypes'
+import { State } from '../Types/ReducerTypes'
 import { ServiciosForm } from '../Formularios/Servicios'
 
 import WarningIcon from '@mui/icons-material/Warning';
@@ -11,27 +10,53 @@ import EditIcon from '@mui/icons-material/Edit';
 
 
 type ServiciosCardProps = {
-    formNo: number,
-    servicios : Servicios | undefined,
     icon: JSX.Element,
-    label: string
+    label: string,
+    form: Formulario,
+    handleFormChange : ( nuevo : Formulario ) => void
 }
 
-export const ServiciosCard : React.FC<ServiciosCardProps> = ({ formNo, servicios, icon, label }) => {
+export const ServiciosCard : React.FC<ServiciosCardProps> = ({ form, handleFormChange, icon, label }) => {
 
-    const initFunc = () : statePayload<Servicios> => {
-        return !servicios 
-            ? {state: State.unregistered, object: undefined}
-            : {state: State.normal, object: servicios}
+    const [ state, setState ] = useState<State>(() => { return form.servicios ? State.normal : State.unregistered; });
+
+    const goToNormal = () => {
+        setState(State.normal);
     }
 
-    const initialState : statePayload<Servicios> = {state: State.unregistered, object: undefined}
+    const goToCancel = () => {
+        setState(form.servicios ? State.normal : State.unregistered)
+    }
 
-    const [state, dispatch] = useReducer(InmuebleReducer<Servicios>, initialState, initFunc)
+    useEffect(() => {
+        setState(form.servicios ? State.normal : State.unregistered)
+    }, [form])
 
 
     const getBody = () => {
-        switch( state.state ){
+
+        if( !form.servicios && state === State.normal ){
+            return (
+                <Stack
+                    spacing={2}
+                    alignItems='center'
+                >
+                    <Stack alignItems='center'>
+                        <WarningIcon sx={{fontSize: 60}} />
+                        <Typography>
+                            Aún no se ha registrado una servicios
+                        </Typography>
+                    </Stack>
+                    <Button
+                        variant='contained'
+                        onClick={ () => setState(State.registering) } 
+                    >
+                        Registrar
+                    </Button>
+                </Stack> 
+            )
+        }
+        switch( state ){
             case State.unregistered:
                 return (
                     <Stack
@@ -46,7 +71,7 @@ export const ServiciosCard : React.FC<ServiciosCardProps> = ({ formNo, servicios
                         </Stack>
                         <Button
                             variant='contained'
-                            onClick={ () => dispatch({type: Actions.goregistering, payload: {state: State.registering, object: state.object}}) }
+                            onClick={ () => setState(State.registering) } 
                         >
                             Registrar
                         </Button>
@@ -55,32 +80,33 @@ export const ServiciosCard : React.FC<ServiciosCardProps> = ({ formNo, servicios
 
             case State.registering:
                 return (<ServiciosForm 
-                    formNo={formNo}
-                    state={state}
-                    dispatch={dispatch}
+                    form={form}
+                    handleFormChange2 ={handleFormChange}
+                    goToNormal={goToNormal}
+                    goToCancel={goToCancel}
                 />)
 
             case State.normal:
                 return (
                     <Stack sx={{position: 'relative'}} spacing={1}>
                         <Typography textAlign='justify'> 
-                            <strong>- Agua Potable: </strong>{state.object!.aguaPotable}
+                            <strong>- Agua Potable: </strong>{form.servicios!.aguaPotable}
                         </Typography>
                         <Typography textAlign='justify'> 
-                            <strong>- Red de Drenaje Sanitario: </strong>{state.object!.drenajeSanitario}
+                            <strong>- Red de Drenaje Sanitario: </strong>{form.servicios!.drenajeSanitario}
                         </Typography>
                         <Typography textAlign='justify'> 
-                            <strong>- Red de Drenaje Pluvial: </strong>{state.object!.drenajePluvial}
+                            <strong>- Red de Drenaje Pluvial: </strong>{form.servicios!.drenajePluvial}
                         </Typography>
                         
                         {
-                            state.object!.otros.length > 0 &&
+                            form.servicios!.otros.length > 0 &&
                             <Typography textAlign='justify'> 
                                 <strong>- Otros: </strong>
                             </Typography>
                         }
                         <Stack sx={{pl:1}}>
-                            {state.object!.otros.map(
+                            {form.servicios!.otros.map(
                                 (el, index) => (
                                     <Typography 
                                         variant='caption' 
@@ -99,7 +125,7 @@ export const ServiciosCard : React.FC<ServiciosCardProps> = ({ formNo, servicios
                         <Tooltip title="Editar" sx={{position: 'absolute', bottom: 0, right: 0}}>
                             <IconButton 
                                 aria-label="editar"
-                                onClick={ () => dispatch({type: Actions.goregistering, payload: {state: State.registering, object: state.object}}) }
+                                onClick={ () => setState(State.registering) } 
                             >
                                 <EditIcon />
                             </IconButton>

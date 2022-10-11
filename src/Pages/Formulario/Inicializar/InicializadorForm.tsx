@@ -16,14 +16,14 @@ export const InicializadorForm = () => {
 
     const URLS = useContext( URLSContext );
 
-    const { component, value } = useDatePicker({ label: 'Fecha de Entrega' });
+    const { component, value } = useDatePicker({ label: 'Fecha de Entrega', initialValue: (new Date()).getTime() });
 
     const { openErrorNotification } = useNotification();
     const navigate = useNavigate();
 
     const handleInitForm = async () => {
 
-        const fechaEntrega = value?.toDate().getTime();
+        const fechaEntrega = value?.toDate().getTime() || 0;
 
         if( !parseInt(formNo) ) {
             openErrorNotification( 'Se debe especificar el número de formulario' );

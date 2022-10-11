@@ -1,36 +1,61 @@
-import React, { useReducer } from 'react'
-import { Planificador } from '../../../../models/Formulario'
+import React, { useState, useEffect } from 'react'
+import { Formulario } from '../../../../models/Formulario'
 import { Button, Divider, IconButton, Paper, Tooltip, Typography } from '@mui/material'
 import { Stack } from '@mui/system'
-import { InmuebleReducer } from '../Reducers/ActualizarFormReducer'
-import { Actions, State, statePayload } from '../Types/ReducerTypes'
+import { State } from '../Types/ReducerTypes'
 import { PlanificadorForm } from '../Formularios/Planificador'
 
 import WarningIcon from '@mui/icons-material/Warning';
 import EditIcon from '@mui/icons-material/Edit';
 
 type PlanificadorCardProps = {
-    formNo: number,
-    planificador : Planificador | undefined,
     icon: JSX.Element,
-    label: string
+    label: string,
+    form: Formulario,
+    handleFormChange : ( nuevo : Formulario ) => void
 }
 
-export const PlanificadorCard : React.FC<PlanificadorCardProps> = ({ formNo, planificador, icon, label }) => {
+export const PlanificadorCard : React.FC<PlanificadorCardProps> = ({ form, handleFormChange, icon, label }) => {
 
-    const initFunc = () : statePayload<Planificador> => {
-        return !planificador 
-            ? {state: State.unregistered, object: undefined}
-            : {state: State.normal, object: planificador}
+    const [ state, setState ] = useState<State>(() => { return form.planificador ? State.normal : State.unregistered; });
+
+    const goToNormal = () => {
+        setState(State.normal);
     }
 
-    const initialState : statePayload<Planificador> = {state: State.unregistered, object: undefined}
+    const goToCancel = () => {
+        setState(form.planificador ? State.normal : State.unregistered)
+    }
 
-    const [state, dispatch] = useReducer(InmuebleReducer<Planificador>, initialState, initFunc)
-
+    useEffect(() => {
+        setState(form.planificador ? State.normal : State.unregistered)
+    }, [form])
 
     const getBody = () => {
-        switch( state.state ){
+
+        if( !form.planificador && state === State.normal ){
+            return (
+                <Stack
+                    spacing={2}
+                    alignItems='center'
+                >
+                    <Stack alignItems='center'>
+                        <WarningIcon sx={{fontSize: 60}} />
+                        <Typography>
+                            Aún no se ha registrado una planificador
+                        </Typography>
+                    </Stack>
+                    <Button
+                        variant='contained'
+                        onClick={ () => setState(State.registering) } 
+                    >
+                        Registrar
+                    </Button>
+                </Stack> 
+            )
+        }
+
+        switch( state ){
             case State.unregistered:
                 return (
                     <Stack
@@ -45,7 +70,7 @@ export const PlanificadorCard : React.FC<PlanificadorCardProps> = ({ formNo, pla
                         </Stack>
                         <Button
                             variant='contained'
-                            onClick={ () => dispatch({type: Actions.goregistering, payload: {state: State.registering, object: state.object}}) }
+                            onClick={ () => setState(State.registering) } 
                         >
                             Registrar
                         </Button>
@@ -54,31 +79,32 @@ export const PlanificadorCard : React.FC<PlanificadorCardProps> = ({ formNo, pla
 
             case State.registering:
                 return (<PlanificadorForm 
-                    formNo={formNo}
-                    state={state}
-                    dispatch={dispatch}
+                    form={form}
+                    handleFormChange2 ={handleFormChange}
+                    goToNormal={goToNormal}
+                    goToCancel={goToCancel}
                 />)
 
             case State.normal:
                 return (
                     <Stack sx={{position: 'relative'}} spacing={1}>
                         <Typography textAlign='justify'> 
-                            <strong>- Nombres: </strong>{state.object!.nombres} {state.object!.apellidos} 
+                            <strong>- Nombres: </strong>{form.planificador!.nombres} {form.planificador!.apellidos} 
                         </Typography>
                         <Typography textAlign='justify'> 
-                            <strong>- Profesión: </strong>{state.object!.profesion} ({state.object!.colegiado ? 'Colegiado' : 'No Colegiado'}) 
+                            <strong>- Profesión: </strong>{form.planificador!.profesion} ({form.planificador!.colegiado ? 'Colegiado' : 'No Colegiado'}) 
                         </Typography>
                         <Typography textAlign='justify'> 
-                            <strong>- Dirección: </strong>{state.object!.direccion} 
+                            <strong>- Dirección: </strong>{form.planificador!.direccion} 
                         </Typography>
                         <Typography> 
-                            <strong>- DPI: </strong>{state.object!.dpi} ({state.object!.extendido}) 
+                            <strong>- DPI: </strong>{form.planificador!.dpi} ({form.planificador!.extendido}) 
                         </Typography>
                         <Typography> 
-                            <strong>- Email: </strong>{state.object!.email}
+                            <strong>- Email: </strong>{form.planificador!.email}
                         </Typography>
                         <Typography> 
-                            <strong>- Teléfonos: </strong>{state.object!.telefonos.join(', ')}
+                            <strong>- Teléfonos: </strong>{form.planificador!.telefonos.join(', ')}
                         </Typography >
                         
                         
@@ -86,7 +112,7 @@ export const PlanificadorCard : React.FC<PlanificadorCardProps> = ({ formNo, pla
                         <Tooltip title="Editar" sx={{position: 'absolute', bottom: 0, right: 0}}>
                             <IconButton 
                                 aria-label="editar"
-                                onClick={ () => dispatch({type: Actions.goregistering, payload: {state: State.registering, object: state.object}}) }
+                                onClick={ () => setState(State.registering) } 
                             >
                                 <EditIcon />
                             </IconButton>

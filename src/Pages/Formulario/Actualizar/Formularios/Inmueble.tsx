@@ -1,23 +1,23 @@
 import React, { useContext, useState } from 'react'
-import { Button, InputAdornment, MenuItem, Select, SelectChangeEvent, Stack, TextField } from '@mui/material'
+import { Button, InputAdornment, MenuItem, Stack, TextField } from '@mui/material'
 import { LoadingButton } from '@mui/lab'
-import { Action, Actions, State, statePayload } from '../Types/ReducerTypes'
-import { EmptyInmueble, Inmueble } from '../../../../models/Formulario'
+import { EmptyInmueble, Formulario, Inmueble } from '../../../../models/Formulario'
 import { URLSContext } from '../../../../context/URLs.context'
 import { actualizarFormulario } from '../../../../services/formularios'
 import { useNotification } from '../../../../hooks/useNotification'
 
 type InmuebleFromProps = {
-    formNo: number,
-    state: statePayload<Inmueble>,
-    dispatch: React.Dispatch<Action<Inmueble>>
+    form: Formulario,
+    handleFormChange2 : ( nuevo : Formulario ) => void,
+    goToNormal: () => void,
+    goToCancel: () => void
 }
 
-export const InmuebleForm : React.FC<InmuebleFromProps> = ({ formNo, state, dispatch }) => {
+export const InmuebleForm : React.FC<InmuebleFromProps> = ({ form, handleFormChange2, goToNormal, goToCancel }) => {
 
     const URLS = useContext( URLSContext );
     const { openErrorNotification, openSuccessNotification } = useNotification();
-    const [ inmueble, setInmueble ] = useState<Inmueble>( state.object === undefined ? {...EmptyInmueble} : {...state.object!} )
+    const [ inmueble, setInmueble ] = useState<Inmueble>( () => form.inmueble ? form.inmueble : {...EmptyInmueble });
     const [ loading, setLoading ] = useState<boolean>(false)
     
     const handleFormChange = ( e : React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> ) => {
@@ -33,7 +33,7 @@ export const InmuebleForm : React.FC<InmuebleFromProps> = ({ formNo, state, disp
     const registrarInmueble = async() => {
 
         setLoading( true )
-        const { result, message, payload } = await actualizarFormulario<Inmueble>( `${URLS.formulario}/actualizarimnueble/${formNo}`, inmueble )
+        const { result, message } = await actualizarFormulario<Inmueble>( `${URLS.formulario}/actualizarimnueble/${form.no}`, inmueble )
         
         if( !result ) {
             openErrorNotification( message )
@@ -41,15 +41,7 @@ export const InmuebleForm : React.FC<InmuebleFromProps> = ({ formNo, state, disp
             return;
         }
 
-        dispatch(            
-            {
-                type: Actions.save,
-                payload: {
-                    state: State.normal,
-                    object: inmueble
-                } 
-            }
-        )
+        handleFormChange2( {...form, inmueble} )
 
         openSuccessNotification('Se actualizó el inmueble')   
         setLoading( false )
@@ -175,10 +167,7 @@ export const InmuebleForm : React.FC<InmuebleFromProps> = ({ formNo, state, disp
                 </LoadingButton> 
 
                 <Button
-                    onClick={ () => dispatch({type: Actions.cancel, payload: { 
-                        state: State.unregistered,
-                        object: state.object
-                    }}) }
+                    onClick={ goToCancel }
                 >
                     Cancelar
                 </Button>

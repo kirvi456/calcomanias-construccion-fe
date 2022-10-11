@@ -49,7 +49,7 @@ export const EmptyObra : Obra = {
     demolicion: false,
     metrosCuadrados: 0,
     meses: 0,
-    niveles: 0,
+    niveles: [],
     tipoUso: '',
     costoEstimado: 0,
 }
@@ -62,7 +62,7 @@ export type Obra = {
     metrosCuadrados: number,
     metrosCubicos: number,
     meses: number,
-    niveles: number,
+    niveles: string[],
     tipoUso: string,
     costoEstimado: number,
 }
@@ -141,12 +141,14 @@ export type Ejecutor = {
 
 export const EmptyRecibo : Recibo = {
     no7b: 0,
-    fecha: (new Date()).getTime()
+    fecha: (new Date()).getTime(),
+    total: 0
 }
 
 export type Recibo = {
     no7b: number,
-    fecha: number
+    fecha: number,
+    total: number
 }
 
 export const EmptyFormulario : Formulario = {

@@ -7,6 +7,8 @@ import NewspaperIcon from '@mui/icons-material/Newspaper';
 import HandymanIcon from '@mui/icons-material/Handyman';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import FeedIcon from '@mui/icons-material/Feed';
+import HorizontalSplitIcon from '@mui/icons-material/HorizontalSplit';
+
 
 interface Pagina {
     titulo : string,
@@ -26,6 +28,11 @@ export const listaPaginas : PaginasPorRol = {
             titulo: 'Inicio',
             icono: <HomeIcon />,
             url: '/adminhome'
+        },
+        {
+            titulo: 'Formularios',
+            icono: <HorizontalSplitIcon />,
+            url: '/formularios'
         },
         {
             titulo: 'Iniciar Formulario',

@@ -1,36 +1,61 @@
-import React, { useReducer } from 'react'
-import { Recibo } from '../../../../models/Formulario'
+import React, { useState, useEffect  } from 'react'
+import { Formulario, } from '../../../../models/Formulario'
 import { Button, Divider, IconButton, Paper, Tooltip, Typography } from '@mui/material'
 import { Stack } from '@mui/system'
-import { InmuebleReducer } from '../Reducers/ActualizarFormReducer'
-import { Actions, State, statePayload } from '../Types/ReducerTypes'
+import { State } from '../Types/ReducerTypes'
 import { ReciboForm } from '../Formularios/Recibo'
 
 import WarningIcon from '@mui/icons-material/Warning';
 import EditIcon from '@mui/icons-material/Edit';
 
 type ReciboCardProps = {
-    formNo: number,
-    recibo : Recibo | undefined,
     icon: JSX.Element,
-    label: string
+    label: string,
+    form: Formulario,
+    handleFormChange : ( nuevo : Formulario ) => void
 }
 
-export const ReciboCard : React.FC<ReciboCardProps> = ({ formNo, recibo, icon, label }) => {
+export const ReciboCard : React.FC<ReciboCardProps> = ({ form, handleFormChange, icon, label }) => {
 
-    const initFunc = () : statePayload<Recibo> => {
-        return !recibo 
-            ? {state: State.unregistered, object: undefined}
-            : {state: State.normal, object: recibo}
+    const [ state, setState ] = useState<State>(() => { return form.recibo ? State.normal : State.unregistered; });
+
+    const goToNormal = () => {
+        setState(State.normal);
     }
 
-    const initialState : statePayload<Recibo> = {state: State.unregistered, object: undefined}
+    const goToCancel = () => {
+        setState(form.recibo ? State.normal : State.unregistered)
+    }
 
-    const [state, dispatch] = useReducer(InmuebleReducer<Recibo>, initialState, initFunc)
-
+    useEffect(() => {
+        setState(form.recibo ? State.normal : State.unregistered)
+    }, [form])
 
     const getBody = () => {
-        switch( state.state ){
+
+        if( !form.recibo && state === State.normal ){
+            return (
+                <Stack
+                    spacing={2}
+                    alignItems='center'
+                >
+                    <Stack alignItems='center'>
+                        <WarningIcon sx={{fontSize: 60}} />
+                        <Typography>
+                            Aún no se ha registrado un recibo
+                        </Typography>
+                    </Stack>
+                    <Button
+                        variant='contained'
+                        onClick={ () => setState(State.registering) } 
+                    >
+                        Registrar
+                    </Button>
+                </Stack> 
+            )
+        }
+
+        switch( state ){
             case State.unregistered:
                 return (
                     <Stack
@@ -40,12 +65,12 @@ export const ReciboCard : React.FC<ReciboCardProps> = ({ formNo, recibo, icon, l
                         <Stack alignItems='center'>
                             <WarningIcon sx={{fontSize: 60}} />
                             <Typography>
-                                Aún no se ha registrado una recibo
+                                Aún no se ha registrado un recibo
                             </Typography>
                         </Stack>
                         <Button
                             variant='contained'
-                            onClick={ () => dispatch({type: Actions.goregistering, payload: {state: State.registering, object: state.object}}) }
+                            onClick={ () => setState(State.registering) } 
                         >
                             Registrar
                         </Button>
@@ -54,25 +79,28 @@ export const ReciboCard : React.FC<ReciboCardProps> = ({ formNo, recibo, icon, l
 
             case State.registering:
                 return (<ReciboForm 
-                    formNo={formNo}
-                    state={state}
-                    dispatch={dispatch}
+                    form={form}
+                    handleFormChange2 ={handleFormChange}
+                    goToNormal={goToNormal}
+                    goToCancel={goToCancel}
                 />)
 
             case State.normal:
                 return (
                     <Stack sx={{position: 'relative'}} spacing={1}>
                         <Typography textAlign='justify'> 
-                            <strong>- Recibo 7B No: </strong>{state.object!.no7b }
+                            <strong>- Recibo 7B No: </strong>{form.recibo!.no7b }
                         </Typography> 
                         <Typography textAlign='justify'> 
-                            <strong>- Fecha Recibo: </strong>{ (new Date(state.object!.fecha)).toLocaleDateString() }
+                            <strong>- Fecha Recibo: </strong>{ (new Date(form.recibo!.fecha)).toLocaleDateString() }
                         </Typography> 
-                        
+                        <Typography textAlign='justify'> 
+                            <strong>- Total: </strong> Q { form.recibo!.total }
+                        </Typography> 
                         <Tooltip title="Editar" sx={{position: 'absolute', bottom: 0, right: 0}}>
                             <IconButton 
                                 aria-label="editar"
-                                onClick={ () => dispatch({type: Actions.goregistering, payload: {state: State.registering, object: state.object}}) }
+                                onClick={ () => setState(State.registering) } 
                             >
                                 <EditIcon />
                             </IconButton>

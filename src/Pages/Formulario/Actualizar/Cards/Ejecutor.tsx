@@ -1,36 +1,63 @@
-import React, { useReducer } from 'react'
-import { Ejecutor } from '../../../../models/Formulario'
+import React, { useEffect, useState } from 'react'
+import { Ejecutor, Formulario } from '../../../../models/Formulario'
 import { Button, Divider, IconButton, Paper, Tooltip, Typography } from '@mui/material'
 import { Stack } from '@mui/system'
-import { InmuebleReducer } from '../Reducers/ActualizarFormReducer'
-import { Actions, State, statePayload } from '../Types/ReducerTypes'
+import { Actions, State } from '../Types/ReducerTypes'
 import { EjecutorForm } from '../Formularios/Ejecutor'
 
 import WarningIcon from '@mui/icons-material/Warning';
 import EditIcon from '@mui/icons-material/Edit';
 
 type EjecutorCardProps = {
-    formNo: number,
-    ejecutor : Ejecutor | undefined,
     icon: JSX.Element,
-    label: string
+    label: string,
+    form: Formulario,
+    handleFormChange : ( nuevo : Formulario ) => void
 }
 
-export const EjecutorCard : React.FC<EjecutorCardProps> = ({ formNo, ejecutor, icon, label }) => {
+export const EjecutorCard : React.FC<EjecutorCardProps> = ({ form, handleFormChange, icon, label }) => {
 
-    const initFunc = () : statePayload<Ejecutor> => {
-        return !ejecutor 
-            ? {state: State.unregistered, object: undefined}
-            : {state: State.normal, object: ejecutor}
+    const [ state, setState ] = useState<State>(() => { return form.ejecutor ? State.normal : State.unregistered; });
+
+    const goToNormal = () => {
+        setState(State.normal);
     }
 
-    const initialState : statePayload<Ejecutor> = {state: State.unregistered, object: undefined}
+    const goToCancel = () => {
+        setState(form.ejecutor ? State.normal : State.unregistered)
+    }
 
-    const [state, dispatch] = useReducer(InmuebleReducer<Ejecutor>, initialState, initFunc)
+    useEffect(() => {
+        setState(form.ejecutor ? State.normal : State.unregistered)
+    }, [form])
 
 
     const getBody = () => {
-        switch( state.state ){
+
+        if( !form.ejecutor && state === State.normal ){
+            return (
+                <Stack
+                    spacing={2}
+                    alignItems='center'
+                >
+                    <Stack alignItems='center'>
+                        <WarningIcon sx={{fontSize: 60}} />
+                        <Typography>
+                            Aún no se ha registrado una ejecutor
+                        </Typography>
+                    </Stack>
+                    <Button
+                        variant='contained'
+                        onClick={ () => setState(State.registering) } 
+                    >
+                        Registrar
+                    </Button>
+                </Stack> 
+            )
+        }
+
+
+        switch( state ){
             case State.unregistered:
                 return (
                     <Stack
@@ -45,7 +72,7 @@ export const EjecutorCard : React.FC<EjecutorCardProps> = ({ formNo, ejecutor, i
                         </Stack>
                         <Button
                             variant='contained'
-                            onClick={ () => dispatch({type: Actions.goregistering, payload: {state: State.registering, object: state.object}}) }
+                            onClick={ () => setState(State.registering) }
                         >
                             Registrar
                         </Button>
@@ -54,31 +81,32 @@ export const EjecutorCard : React.FC<EjecutorCardProps> = ({ formNo, ejecutor, i
 
             case State.registering:
                 return (<EjecutorForm 
-                    formNo={formNo}
-                    state={state}
-                    dispatch={dispatch}
+                    form={form}
+                    handleFormChange2 ={handleFormChange}
+                    goToNormal={goToNormal}
+                    goToCancel={goToCancel}
                 />)
 
             case State.normal:
                 return (
                     <Stack sx={{position: 'relative'}} spacing={1}>
                         <Typography textAlign='justify'> 
-                            <strong>- Nombres: </strong>{state.object!.nombres} {state.object!.apellidos} 
+                            <strong>- Nombres: </strong>{form.ejecutor!.nombres} {form.ejecutor!.apellidos} 
                         </Typography>
                         <Typography textAlign='justify'> 
-                            <strong>- Profesión: </strong>{state.object!.profesion} ({state.object!.colegiado ? 'Colegiado' : 'No Colegiado'}) 
+                            <strong>- Profesión: </strong>{form.ejecutor!.profesion} ({form.ejecutor!.colegiado ? 'Colegiado' : 'No Colegiado'}) 
                         </Typography>
                         <Typography textAlign='justify'> 
-                            <strong>- Dirección: </strong>{state.object!.direccion} 
+                            <strong>- Dirección: </strong>{form.ejecutor!.direccion} 
                         </Typography>
                         <Typography> 
-                            <strong>- DPI: </strong>{state.object!.dpi} ({state.object!.extendido}) 
+                            <strong>- DPI: </strong>{form.ejecutor!.dpi} ({form.ejecutor!.extendido}) 
                         </Typography>
                         <Typography> 
-                            <strong>- Email: </strong>{state.object!.email}
+                            <strong>- Email: </strong>{form.ejecutor!.email}
                         </Typography>
                         <Typography> 
-                            <strong>- Teléfonos: </strong>{state.object!.telefonos.join(', ')}
+                            <strong>- Teléfonos: </strong>{form.ejecutor!.telefonos.join(', ')}
                         </Typography >
                         
                         
@@ -86,7 +114,7 @@ export const EjecutorCard : React.FC<EjecutorCardProps> = ({ formNo, ejecutor, i
                         <Tooltip title="Editar" sx={{position: 'absolute', bottom: 0, right: 0}}>
                             <IconButton 
                                 aria-label="editar"
-                                onClick={ () => dispatch({type: Actions.goregistering, payload: {state: State.registering, object: state.object}}) }
+                                onClick={ () => setState(State.registering) }
                             >
                                 <EditIcon />
                             </IconButton>

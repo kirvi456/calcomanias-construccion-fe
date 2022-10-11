@@ -1,36 +1,62 @@
-import React, { useReducer } from 'react'
-import { Obra } from '../../../../models/Formulario'
+import React, { useState, useEffect } from 'react'
+import { Formulario, Obra } from '../../../../models/Formulario'
 import { Button, Divider, IconButton, Paper, Tooltip, Typography } from '@mui/material'
 import { Stack } from '@mui/system'
-import { InmuebleReducer } from '../Reducers/ActualizarFormReducer'
-import { Actions, State, statePayload } from '../Types/ReducerTypes'
-import { ObraForm } from '../Formularios/Obra'
+import { State } from '../Types/ReducerTypes'
+import { ObraForm } from '../Formularios/Obra/Obra'
 
 import WarningIcon from '@mui/icons-material/Warning';
 import EditIcon from '@mui/icons-material/Edit';
 
 type ObraCardProps = {
-    formNo: number,
-    obra : Obra | undefined,
     icon: JSX.Element,
-    label: string
+    label: string,
+    form: Formulario,
+    handleFormChange : ( nuevo : Formulario ) => void
 }
 
-export const ObraCard : React.FC<ObraCardProps> = ({ formNo, obra, icon, label }) => {
+export const ObraCard : React.FC<ObraCardProps> = ({ form, handleFormChange, icon, label }) => {
 
-    const initFunc = () : statePayload<Obra> => {
-        return !obra 
-            ? {state: State.unregistered, object: undefined}
-            : {state: State.normal, object: obra}
+    const [ state, setState ] = useState<State>(() => { return form.obra ? State.normal : State.unregistered; });
+
+    const goToNormal = () => {
+        setState(State.normal);
     }
 
-    const initialState : statePayload<Obra> = {state: State.unregistered, object: undefined}
+    const goToCancel = () => {
+        setState(form.obra ? State.normal : State.unregistered)
+    }
 
-    const [state, dispatch] = useReducer(InmuebleReducer<Obra>, initialState, initFunc)
+    useEffect(() => {
+        setState(form.obra ? State.normal : State.unregistered)
+    }, [form])
 
 
     const getBody = () => {
-        switch( state.state ){
+
+        if( !form.obra && state === State.normal ){
+            return (
+                <Stack
+                    spacing={2}
+                    alignItems='center'
+                >
+                    <Stack alignItems='center'>
+                        <WarningIcon sx={{fontSize: 60}} />
+                        <Typography>
+                            Aún no se ha registrado una obra
+                        </Typography>
+                    </Stack>
+                    <Button
+                        variant='contained'
+                        onClick={ () => setState(State.registering) } 
+                    >
+                        Registrar
+                    </Button>
+                </Stack> 
+            )    
+        }
+
+        switch( state ){
             case State.unregistered:
                 return (
                     <Stack
@@ -45,7 +71,7 @@ export const ObraCard : React.FC<ObraCardProps> = ({ formNo, obra, icon, label }
                         </Stack>
                         <Button
                             variant='contained'
-                            onClick={ () => dispatch({type: Actions.goregistering, payload: {state: State.registering, object: state.object}}) }
+                            onClick={ () => setState(State.registering) } 
                         >
                             Registrar
                         </Button>
@@ -54,44 +80,45 @@ export const ObraCard : React.FC<ObraCardProps> = ({ formNo, obra, icon, label }
 
             case State.registering:
                 return (<ObraForm 
-                    formNo={formNo}
-                    state={state}
-                    dispatch={dispatch}
+                    form={form}
+                    handleFormChange2 ={handleFormChange}
+                    goToNormal={goToNormal}
+                    goToCancel={goToCancel}
                 />)
 
             case State.normal:
                 return (
                     <Stack sx={{position: 'relative'}} spacing={1}>
                         <Typography textAlign='justify'> 
-                            <strong>- Tipo de Obra: </strong>{state.object!.tipo}
+                            <strong>- Tipo de Obra: </strong>{form.obra!.tipo}
                         </Typography>
                         <Typography textAlign='justify'> 
-                            <strong>- Área a construir: </strong>{state.object!.area}
+                            <strong>- Área a construir: </strong>{form.obra!.area}
                         </Typography>
                         <Typography textAlign='justify'> 
-                            <strong>- Movimiento de tierra: </strong>{state.object!.movimientoTierra ? 'SI ' : 'NO '}
-                            ( {state.object!.metrosCubicos } mts³ )
+                            <strong>- Movimiento de tierra: </strong>{form.obra!.movimientoTierra ? 'SI ' : 'NO '}
+                            ( {form.obra!.metrosCubicos } mts³ )
                         </Typography>
                         <Typography textAlign='justify'> 
-                            <strong>- Demolición: </strong>{state.object!.demolicion ? 'SI ' : 'NO '} 
-                            ( {state.object!.metrosCuadrados } mts² )
+                            <strong>- Demolición: </strong>{form.obra!.demolicion ? 'SI ' : 'NO '} 
+                            ( {form.obra!.metrosCuadrados } mts² )
                         </Typography>
                         <Typography textAlign='justify'> 
-                            <strong>- Tipo de uso: </strong>{state.object!.tipoUso}
+                            <strong>- Tipo de uso: </strong>{form.obra!.tipoUso}
                         </Typography>
                         <Typography textAlign='justify'> 
-                            <strong>- Área a construir: </strong>{state.object!.costoEstimado} meses
+                            <strong>- Área a construir: </strong>{form.obra!.costoEstimado} meses
                         </Typography>
                         <Typography textAlign='justify'> 
-                            <strong>- Niveles y/o Pisos: </strong>{state.object!.niveles}
+                            <strong>- Niveles y/o Pisos: </strong>{form.obra!.niveles.join(', ')}
                         </Typography>
                         <Typography textAlign='justify'> 
-                            <strong>- Costo Estimado: </strong>Q {state.object!.costoEstimado}
+                            <strong>- Costo Estimado: </strong>Q {form.obra!.costoEstimado}
                         </Typography>
                         <Tooltip title="Editar" sx={{position: 'absolute', bottom: 0, right: 0}}>
                             <IconButton 
                                 aria-label="editar"
-                                onClick={ () => dispatch({type: Actions.goregistering, payload: {state: State.registering, object: state.object}}) }
+                                onClick={ () => setState(State.registering) } 
                             >
                                 <EditIcon />
                             </IconButton>

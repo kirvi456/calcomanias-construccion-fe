@@ -9,6 +9,7 @@ import { AdminOpcionesPage } from './Pages/AdminOpciones';
 import { AdminPanelPage } from './Pages/AdminPanel';
 import { AdminRubrosPage } from './Pages/AdminRubros';
 import { ActualizarFormPage } from './Pages/Formulario/Actualizar';
+import { BuscadorFormularioPage } from './Pages/Formulario/Buscador';
 import { InicializadorFormPage } from './Pages/Formulario/Inicializar';
 
 
@@ -39,6 +40,7 @@ export const AppRouter : React.FC<{}> = () => {
                     <Route path='/digitadorhome' element={<DigitadorHomePage />} /> 
                     <Route path='/iniciarform' element={<InicializadorFormPage />} /> 
                     <Route path='/formulario' element={<ActualizarFormPage />} /> 
+                    <Route path='/formularios' element={<BuscadorFormularioPage />} /> 
                 </Route>
 
             </Route>

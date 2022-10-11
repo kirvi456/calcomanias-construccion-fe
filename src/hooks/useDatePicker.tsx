@@ -1,5 +1,5 @@
 import React from 'react'
-import { Dayjs } from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/es'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -8,12 +8,13 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TextField } from '@mui/material'
 
 type useDatePickerProps = {
-    label: string
+    label: string,
+    initialValue?: number
 }
 
-export const useDatePicker = ({ label } : useDatePickerProps) => {
+export const useDatePicker = ({ label, initialValue = 0} : useDatePickerProps) => {
     
-    const [value, setValue] = React.useState<Dayjs | null>(null);
+    const [value, setValue] = React.useState<Dayjs | null>(dayjs(initialValue));
 
     return { component: (
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale='es'>

@@ -1,29 +1,28 @@
 import React, { useContext, useState } from 'react'
 import { Button, Stack, TextField } from '@mui/material'
 import { LoadingButton } from '@mui/lab'
-import { PropietarioAction, PropietarioActions, PropietatioState, statePayload } from '../Types/Propietario'
 import { EmptyPropietario, Formulario, Propietario } from '../../../../models/Formulario'
 import { StringList } from '../../../../components/StringList'
 import { URLSContext } from '../../../../context/URLs.context'
 import { actualizarFormulario } from '../../../../services/formularios'
 import { useNotification } from '../../../../hooks/useNotification'
 
-type PropietarioFromProps = {
-    formNo: number,
-    state: statePayload,
-    dispatch: React.Dispatch<PropietarioAction>,
+type PropietarioFromProps = {    
     form: Formulario,
-    setForm: React.Dispatch<React.SetStateAction<Formulario | undefined>>,
-    handleFormChange2 : ( nuevo : Formulario ) => void
+    handleFormChange2 : ( nuevo : Formulario ) => void,
+    goToNormal: () => void
+    goToCancel: () => void
 }
 
-export const PropietarioForm : React.FC<PropietarioFromProps> = ({ formNo, state, form, handleFormChange2, setForm, dispatch }) => {
+export const PropietarioForm : React.FC<PropietarioFromProps> = ({ form, handleFormChange2, goToNormal, goToCancel }) => {
 
     const URLS = useContext( URLSContext );
     const { openErrorNotification, openSuccessNotification } = useNotification();
-    const [ propietario, setPropietario ] = useState<Propietario>( state.propietario === undefined ? {...EmptyPropietario} : {...state.propietario!} )
+
     const [ loading, setLoading ] = useState<boolean>(false)
-    
+    const [ propietario, setPropietario] = useState<Propietario>( () => form.propietario ? form.propietario : {...EmptyPropietario})
+
+
     const handleFormChange = ( e : React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> ) => {
         propietario[ e.target.name as 'nombres' ] = e.target.value;
         setPropietario( { ...propietario } )
@@ -37,7 +36,7 @@ export const PropietarioForm : React.FC<PropietarioFromProps> = ({ formNo, state
     const registrarPropietario = async() => {
 
         setLoading( true )
-        const { result, message, payload } = await actualizarFormulario<Propietario>( `${URLS.formulario}/actualizarpropietario/${formNo}`, propietario )
+        const { result, message } = await actualizarFormulario<Propietario>( `${URLS.formulario}/actualizarpropietario/${form.no}`, propietario )
         
         if( !result ) {
             openErrorNotification( message )
@@ -45,22 +44,13 @@ export const PropietarioForm : React.FC<PropietarioFromProps> = ({ formNo, state
             return;
         }
 
-        dispatch(            
-            {
-                type:PropietarioActions.save,
-                payload: {
-                    state: PropietatioState.normal,
-                    propietario
-                } 
-            }
-        )
+        
 
-        console.log('el supuesto spred', propietario)
-
-        handleFormChange2({...form, propietario : {...propietario}})
+        handleFormChange2( {...form, propietario} )
 
         openSuccessNotification('Se actualizó el propietario')   
         setLoading( false )
+        goToNormal();
     }
 
     return (
@@ -159,10 +149,7 @@ export const PropietarioForm : React.FC<PropietarioFromProps> = ({ formNo, state
                 </LoadingButton> 
 
                 <Button
-                    onClick={ () => dispatch({type: PropietarioActions.cancel, payload: { 
-                        state: PropietatioState.unregistered,
-                        propietario: state.propietario
-                    }}) }
+                    onClick={ goToCancel }
                 >
                     Cancelar
                 </Button>

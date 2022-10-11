@@ -8,6 +8,9 @@ type MenuBarProps = {
 }
 
 export const MenuBar : React.FC<MenuBarProps> = ( { options, handleSelect } ) => {
+
+    console.log('Se renderiza el bar del top')
+
     return (
       <Stack sx={{ maxWidth: '90%', overflowX: 'auto' }}>
         <Stack direction='row' spacing={2} sx={{mt: 2, maxWidth: '100%', pl: 2, pr: 2}}>

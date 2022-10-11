@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import queryString from 'query-string';
 import useFetch from '../../../hooks/useFetch';
-import { EmptyFormulario, Formulario } from '../../../models/Formulario';
+import { EmptyFormulario, Formulario, Propietario } from '../../../models/Formulario';
 import { URLSContext } from '../../../context/URLs.context';
 import { Button, Container } from '@mui/material';
 import { Menu } from './Menu';
@@ -19,9 +19,8 @@ export const ActualizarFormPage = () => {
     const [form, setForm] = useState<Formulario>();
 
     const handleFormChange = ( nuevo : Formulario ) => {
-        console.log( 'se esta intentando cambiarrrrr', nuevo )
-        const cuz = JSON.parse(JSON.stringify(nuevo));
-        setForm( cuz )
+        
+        if( form ) setForm( JSON.parse(JSON.stringify(nuevo) ) )
     }
 
     useEffect( () => {
@@ -47,7 +46,6 @@ export const ActualizarFormPage = () => {
         <Container>
             <Menu 
                 form = { form! }
-                setForm = { setForm }
                 handleFormChange={handleFormChange}
             />
             <Button 

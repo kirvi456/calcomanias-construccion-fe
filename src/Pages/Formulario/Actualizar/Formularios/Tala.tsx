@@ -1,8 +1,7 @@
 import React, { useContext, useState } from 'react'
 import { Button, MenuItem, Stack, TextField } from '@mui/material'
 import { LoadingButton } from '@mui/lab'
-import { Action, Actions, State, statePayload } from '../Types/ReducerTypes'
-import { EmptyTala, Tala } from '../../../../models/Formulario'
+import { EmptyTala, Formulario, Tala } from '../../../../models/Formulario'
 import { URLSContext } from '../../../../context/URLs.context'
 import { actualizarFormulario } from '../../../../services/formularios'
 import { useNotification } from '../../../../hooks/useNotification'
@@ -11,16 +10,17 @@ import { useNotification } from '../../../../hooks/useNotification'
 import { APISelect } from '../../../../components/APISelect'
 
 type TalaFromProps = {
-    formNo: number,
-    state: statePayload<Tala>,
-    dispatch: React.Dispatch<Action<Tala>>
+    form: Formulario,
+    handleFormChange2 : ( nuevo : Formulario ) => void,
+    goToNormal: () => void,
+    goToCancel: () => void
 }
 
-export const TalaForm : React.FC<TalaFromProps> = ({ formNo, state, dispatch }) => {
+export const TalaForm : React.FC<TalaFromProps> = ({ form, handleFormChange2, goToNormal, goToCancel }) => {
 
     const URLS = useContext( URLSContext );
     const { openErrorNotification, openSuccessNotification } = useNotification();
-    const [ tala, setTala ] = useState<Tala>( state.object === undefined ? {...EmptyTala} : {...state.object!} )
+    const [ tala, setTala ] = useState<Tala>( () => form.tala ? form.tala : {...EmptyTala });
     const [ loading, setLoading ] = useState<boolean>(false)
     
     const handleFormChange = ( e : React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> ) => {
@@ -38,7 +38,7 @@ export const TalaForm : React.FC<TalaFromProps> = ({ formNo, state, dispatch }) 
     const registrarTala = async() => {
 
         setLoading( true )
-        const { result, message, payload } = await actualizarFormulario<Tala>( `${URLS.formulario}/actualizartala/${formNo}`, tala )
+        const { result, message } = await actualizarFormulario<Tala>( `${URLS.formulario}/actualizartala/${form.no}`, tala )
         
         if( !result ) {
             openErrorNotification( message )
@@ -46,15 +46,7 @@ export const TalaForm : React.FC<TalaFromProps> = ({ formNo, state, dispatch }) 
             return;
         }
 
-        dispatch(            
-            {
-                type: Actions.save,
-                payload: {
-                    state: State.normal,
-                    object: tala
-                } 
-            }
-        )
+        handleFormChange2( {...form, tala} )
 
         openSuccessNotification('Se actualizó el tala')   
         setLoading( false )
@@ -98,10 +90,7 @@ export const TalaForm : React.FC<TalaFromProps> = ({ formNo, state, dispatch }) 
                 </LoadingButton> 
 
                 <Button
-                    onClick={ () => dispatch({type: Actions.cancel, payload: { 
-                        state: State.unregistered,
-                        object: state.object
-                    }}) }
+                    onClick={ goToCancel }
                 >
                     Cancelar
                 </Button>

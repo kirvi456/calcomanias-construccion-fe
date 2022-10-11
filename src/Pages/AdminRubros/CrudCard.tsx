@@ -60,7 +60,7 @@ export const CrudCard : React.FC<CrudCardProps> = ({ title, path }) => {
             <Stack>
                 {
                     items.length > 0 ?
-                    items.map( ( { _id, no, desc, unidad } ) => {
+                    items.map( ( { _id, no, desc, unidad, unidadDesc } ) => {
                         return (
                             <CrudListItem 
                                 key={ _id }
@@ -68,6 +68,7 @@ export const CrudCard : React.FC<CrudCardProps> = ({ title, path }) => {
                                 no={ no }
                                 desc={ desc }
                                 unidad={ unidad }
+                                unidadDesc={ unidadDesc }
                                 path={ path }
                                 handleDeleteSuccess = { handleDeleteSuccess }
                             />

@@ -1,5 +1,6 @@
 import { Formulario, Inmueble, Propietario } from "../models/Formulario";
-import { FetchRequest } from "../utils/MakeRequest";
+import { FetchRequest, FetchRequestImg } from "../utils/MakeRequest";
+import { BasicResponse } from "./types";
 
 
 export const actualizarFormulario = async <T>( url : string, body : T ) => {
@@ -38,4 +39,16 @@ export const inicializarFormulario = async( url : string, body : any ) => {
     }
 
     return { result: false, message: 'No se pudo crear. Intentelo más tarde.', payload: undefined}
+}
+
+export const getQR = async ( url : string ) : Promise<BasicResponse<string>> => {
+    try{
+
+        const compu = await FetchRequestImg( url ,'GET', undefined );        
+
+        return { response: true, message: 'Computadora guardada.', payload: compu.data };
+
+    } catch (error : any ){
+        return { response: false, message: error.error };
+    }
 }

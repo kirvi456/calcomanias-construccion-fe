@@ -1,36 +1,62 @@
-import React, { useReducer } from 'react'
-import { Tala } from '../../../../models/Formulario'
+import React, { useState, useEffect } from 'react'
+import { Formulario } from '../../../../models/Formulario'
 import { Button, Divider, IconButton, Paper, Tooltip, Typography } from '@mui/material'
 import { Stack } from '@mui/system'
-import { InmuebleReducer } from '../Reducers/ActualizarFormReducer'
-import { Actions, State, statePayload } from '../Types/ReducerTypes'
+import { State } from '../Types/ReducerTypes'
 import { TalaForm } from '../Formularios/Tala'
 
 import WarningIcon from '@mui/icons-material/Warning';
 import EditIcon from '@mui/icons-material/Edit';
 
 type TalaCardProps = {
-    formNo: number,
-    tala : Tala | undefined,
     icon: JSX.Element,
-    label: string
+    label: string,
+    form: Formulario,
+    handleFormChange : ( nuevo : Formulario ) => void
 }
 
-export const TalaCard : React.FC<TalaCardProps> = ({ formNo, tala, icon, label }) => {
+export const TalaCard : React.FC<TalaCardProps> = ({ form, handleFormChange, icon, label }) => {
 
-    const initFunc = () : statePayload<Tala> => {
-        return !tala 
-            ? {state: State.unregistered, object: undefined}
-            : {state: State.normal, object: tala}
+    const [ state, setState ] = useState<State>(() => { return form.tala ? State.normal : State.unregistered; });
+
+    const goToNormal = () => {
+        setState(State.normal);
     }
 
-    const initialState : statePayload<Tala> = {state: State.unregistered, object: undefined}
+    const goToCancel = () => {
+        setState(form.tala ? State.normal : State.unregistered)
+    }
 
-    const [state, dispatch] = useReducer(InmuebleReducer<Tala>, initialState, initFunc)
+    useEffect(() => {
+        setState(form.tala ? State.normal : State.unregistered)
+    }, [form])
 
 
     const getBody = () => {
-        switch( state.state ){
+
+        if( !form.tala && state === State.normal ){
+            return (
+                <Stack
+                    spacing={2}
+                    alignItems='center'
+                >
+                    <Stack alignItems='center'>
+                        <WarningIcon sx={{fontSize: 60}} />
+                        <Typography>
+                            Aún no se ha registrado una tala
+                        </Typography>
+                    </Stack>
+                    <Button
+                        variant='contained'
+                        onClick={ () => setState(State.registering) } 
+                    >
+                        Registrar
+                    </Button>
+                </Stack> 
+            )
+        }
+
+        switch( state ){
             case State.unregistered:
                 return (
                     <Stack
@@ -40,12 +66,12 @@ export const TalaCard : React.FC<TalaCardProps> = ({ formNo, tala, icon, label }
                         <Stack alignItems='center'>
                             <WarningIcon sx={{fontSize: 60}} />
                             <Typography>
-                                Aún no se ha registrado una tala
+                                Aún no se ha registrado la tala
                             </Typography>
                         </Stack>
                         <Button
                             variant='contained'
-                            onClick={ () => dispatch({type: Actions.goregistering, payload: {state: State.registering, object: state.object}}) }
+                            onClick={ () => setState(State.registering) } 
                         >
                             Registrar
                         </Button>
@@ -54,23 +80,24 @@ export const TalaCard : React.FC<TalaCardProps> = ({ formNo, tala, icon, label }
 
             case State.registering:
                 return (<TalaForm 
-                    formNo={formNo}
-                    state={state}
-                    dispatch={dispatch}
+                    form={form}
+                    handleFormChange2 ={handleFormChange}
+                    goToNormal={goToNormal}
+                    goToCancel={goToCancel}
                 />)
 
             case State.normal:
                 return (
                     <Stack sx={{position: 'relative'}} spacing={1}>
                         <Typography textAlign='justify'> 
-                            <strong>- Se Realizará Tala de Árboles: </strong>{state.object!.necesario ? 'SI ' : 'NO '}
-                            ( { state.object!.necesario ?  state.object!.tipo : '----' } )
+                            <strong>- Se Realizará Tala de Árboles: </strong>{form.tala!.necesario ? 'SI ' : 'NO '}
+                            ( { form.tala!.necesario ?  form.tala!.tipo : '----' } )
                         </Typography> 
                         
                         <Tooltip title="Editar" sx={{position: 'absolute', bottom: 0, right: 0}}>
                             <IconButton 
                                 aria-label="editar"
-                                onClick={ () => dispatch({type: Actions.goregistering, payload: {state: State.registering, object: state.object}}) }
+                                onClick={ () => setState(State.registering) } 
                             >
                                 <EditIcon />
                             </IconButton>

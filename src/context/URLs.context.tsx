@@ -11,6 +11,7 @@ type URLSList = {
     tipotala            : string;
     formulario          : string;
     rubros              : string;
+    calcomania          : string;
 }
 
 console.log(import.meta.env.VITE_APP_BASE_URL)
@@ -27,6 +28,7 @@ const myURLS : URLSList = {
     tipotala:               `${import.meta.env.VITE_APP_BASE_URL}api/talatipo`,
     formulario:             `${import.meta.env.VITE_APP_BASE_URL}api/formularios`,
     rubros:                 `${import.meta.env.VITE_APP_BASE_URL}api/rubro`,
+    calcomania:             `${import.meta.env.VITE_APP_BASE_URL}api/calcomania`,
 }
 
 

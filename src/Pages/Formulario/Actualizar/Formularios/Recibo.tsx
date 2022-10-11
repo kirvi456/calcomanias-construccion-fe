@@ -1,8 +1,7 @@
 import React, { useContext, useState } from 'react'
 import { Button, Stack, TextField } from '@mui/material'
 import { LoadingButton } from '@mui/lab'
-import { Action, Actions, State, statePayload } from '../Types/ReducerTypes'
-import { EmptyRecibo, Recibo } from '../../../../models/Formulario'
+import { EmptyRecibo, Formulario, Recibo } from '../../../../models/Formulario'
 import { URLSContext } from '../../../../context/URLs.context'
 import { actualizarFormulario } from '../../../../services/formularios'
 import { useNotification } from '../../../../hooks/useNotification'
@@ -11,18 +10,19 @@ import { useNotification } from '../../../../hooks/useNotification'
 import { useDatePicker } from '../../../../hooks/useDatePicker'
 
 type ReciboFromProps = {
-    formNo: number,
-    state: statePayload<Recibo>,
-    dispatch: React.Dispatch<Action<Recibo>>
+    form: Formulario,
+    handleFormChange2 : ( nuevo : Formulario ) => void,
+    goToNormal: () => void,
+    goToCancel: () => void
 }
 
-export const ReciboForm : React.FC<ReciboFromProps> = ({ formNo, state, dispatch }) => {
+export const ReciboForm : React.FC<ReciboFromProps> = ({ form, handleFormChange2, goToNormal, goToCancel }) => {
 
-    const { component, value } = useDatePicker({ label: 'Fecha Recibo' });
+    const [ recibo, setRecibo ] = useState<Recibo>( () => form.recibo ? form.recibo : {...EmptyRecibo });
+    const { component, value } = useDatePicker({ label: 'Fecha Recibo', initialValue: recibo?.fecha || 0 });
 
     const URLS = useContext( URLSContext );
     const { openErrorNotification, openSuccessNotification } = useNotification();
-    const [ recibo, setRecibo ] = useState<Recibo>( state.object === undefined ? {...EmptyRecibo} : {...state.object!} )
     const [ loading, setLoading ] = useState<boolean>(false)
     
     const handleFormChange = ( e : React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> ) => {
@@ -35,7 +35,9 @@ export const ReciboForm : React.FC<ReciboFromProps> = ({ formNo, state, dispatch
     const registrarRecibo = async() => {
 
         setLoading( true )
-        const { result, message, payload } = await actualizarFormulario<Recibo>( `${URLS.formulario}/actualizarrecibo/${formNo}`, recibo )
+        const fecha = value?.toDate().getTime() || 0 ;
+        alert(fecha)
+        const { result, message, payload } = await actualizarFormulario<Recibo>( `${URLS.formulario}/actualizarrecibo/${form.no}`, { ...recibo, fecha } )
         
         if( !result ) {
             openErrorNotification( message )
@@ -43,15 +45,7 @@ export const ReciboForm : React.FC<ReciboFromProps> = ({ formNo, state, dispatch
             return;
         }
 
-        dispatch(            
-            {
-                type: Actions.save,
-                payload: {
-                    state: State.normal,
-                    object: recibo
-                } 
-            }
-        )
+        handleFormChange2( {...form, recibo: {...recibo, fecha } } )
 
         openSuccessNotification('Se actualizó el recibo')   
         setLoading( false )
@@ -81,6 +75,18 @@ export const ReciboForm : React.FC<ReciboFromProps> = ({ formNo, state, dispatch
             
             {component}
 
+            <TextField 
+                size='small'
+                type='number'
+                
+                label="Total Recibo 7B" 
+                name="total" 
+                variant="outlined" 
+                fullWidth
+                value={ recibo.total }
+                onChange={ handleFormChange }
+            />
+
             <Stack spacing={1}>
                 <LoadingButton
                     loading={loading}
@@ -91,10 +97,7 @@ export const ReciboForm : React.FC<ReciboFromProps> = ({ formNo, state, dispatch
                 </LoadingButton> 
 
                 <Button
-                    onClick={ () => dispatch({type: Actions.cancel, payload: { 
-                        state: State.unregistered,
-                        object: state.object
-                    }}) }
+                    onClick={ goToCancel }
                 >
                     Cancelar
                 </Button>

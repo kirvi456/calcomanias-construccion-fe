@@ -1,8 +1,7 @@
 import React, { useContext, useState } from 'react'
 import { Button, Stack } from '@mui/material'
 import { LoadingButton } from '@mui/lab'
-import { Action, Actions, State, statePayload } from '../Types/ReducerTypes'
-import { EmptyServicios, Servicios } from '../../../../models/Formulario'
+import { EmptyServicios, Formulario, Servicios } from '../../../../models/Formulario'
 import { URLSContext } from '../../../../context/URLs.context'
 import { actualizarFormulario } from '../../../../services/formularios'
 import { useNotification } from '../../../../hooks/useNotification'
@@ -12,16 +11,17 @@ import { APISelect } from '../../../../components/APISelect'
 import { StringList } from '../../../../components/StringList'
 
 type ServiciosFromProps = {
-    formNo: number,
-    state: statePayload<Servicios>,
-    dispatch: React.Dispatch<Action<Servicios>>
+    form: Formulario,
+    handleFormChange2 : ( nuevo : Formulario ) => void,
+    goToNormal: () => void,
+    goToCancel: () => void
 }
 
-export const ServiciosForm : React.FC<ServiciosFromProps> = ({ formNo, state, dispatch }) => {
+export const ServiciosForm : React.FC<ServiciosFromProps> = ({ form, handleFormChange2, goToNormal, goToCancel }) => {
 
     const URLS = useContext( URLSContext );
     const { openErrorNotification, openSuccessNotification } = useNotification();
-    const [ servicios, setServicios ] = useState<Servicios>( state.object === undefined ? {...EmptyServicios} : {...state.object!} )
+    const [ servicios, setServicios ] = useState<Servicios>( () => form.servicios ? form.servicios : {...EmptyServicios });
     const [ loading, setLoading ] = useState<boolean>(false)
     
     const handleFormChange = ( e : React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> ) => {
@@ -37,7 +37,7 @@ export const ServiciosForm : React.FC<ServiciosFromProps> = ({ formNo, state, di
     const registrarServicios = async() => {
 
         setLoading( true )
-        const { result, message, payload } = await actualizarFormulario<Servicios>( `${URLS.formulario}/actualizarservicios/${formNo}`, servicios )
+        const { result, message, payload } = await actualizarFormulario<Servicios>( `${URLS.formulario}/actualizarservicios/${form.no}`, servicios )
         
         if( !result ) {
             openErrorNotification( message )
@@ -45,15 +45,7 @@ export const ServiciosForm : React.FC<ServiciosFromProps> = ({ formNo, state, di
             return;
         }
 
-        dispatch(            
-            {
-                type: Actions.save,
-                payload: {
-                    state: State.normal,
-                    object: servicios
-                } 
-            }
-        )
+        handleFormChange2( {...form, servicios} )
 
         openSuccessNotification('Se actualizó el servicios')   
         setLoading( false )
@@ -109,10 +101,7 @@ export const ServiciosForm : React.FC<ServiciosFromProps> = ({ formNo, state, di
                 </LoadingButton> 
 
                 <Button
-                    onClick={ () => dispatch({type: Actions.cancel, payload: { 
-                        state: State.unregistered,
-                        object: state.object
-                    }}) }
+                    onClick={ goToCancel }
                 >
                     Cancelar
                 </Button>

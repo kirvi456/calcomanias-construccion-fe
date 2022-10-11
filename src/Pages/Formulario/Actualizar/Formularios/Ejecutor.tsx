@@ -1,8 +1,7 @@
 import React, { useContext, useState } from 'react'
 import { Button, MenuItem, Stack, TextField } from '@mui/material'
 import { LoadingButton } from '@mui/lab'
-import { Action, Actions, State, statePayload } from '../Types/ReducerTypes'
-import { EmptyEjecutor, Ejecutor } from '../../../../models/Formulario'
+import { EmptyEjecutor, Ejecutor, Formulario } from '../../../../models/Formulario'
 import { URLSContext } from '../../../../context/URLs.context'
 import { actualizarFormulario } from '../../../../services/formularios'
 import { useNotification } from '../../../../hooks/useNotification'
@@ -12,16 +11,17 @@ import { APISelect } from '../../../../components/APISelect'
 import { StringList } from '../../../../components/StringList'
 
 type EjecutorFromProps = {
-    formNo: number,
-    state: statePayload<Ejecutor>,
-    dispatch: React.Dispatch<Action<Ejecutor>>
+    form: Formulario,
+    handleFormChange2 : ( nuevo : Formulario ) => void,
+    goToNormal: () => void,
+    goToCancel: () => void
 }
 
-export const EjecutorForm : React.FC<EjecutorFromProps> = ({ formNo, state, dispatch }) => {
+export const EjecutorForm : React.FC<EjecutorFromProps> = ({ form, handleFormChange2, goToNormal, goToCancel }) => {
 
     const URLS = useContext( URLSContext );
     const { openErrorNotification, openSuccessNotification } = useNotification();
-    const [ ejecutor, setEjecutor ] = useState<Ejecutor>( state.object === undefined ? {...EmptyEjecutor} : {...state.object!} )
+    const [ ejecutor, setEjecutor ] = useState<Ejecutor>( () => form.ejecutor ? form.ejecutor : {...EmptyEjecutor });
     const [ loading, setLoading ] = useState<boolean>(false)
     
     const handleFormChange = ( e : React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> ) => {
@@ -42,7 +42,7 @@ export const EjecutorForm : React.FC<EjecutorFromProps> = ({ formNo, state, disp
     const registrarEjecutor = async() => {
 
         setLoading( true )
-        const { result, message, payload } = await actualizarFormulario<Ejecutor>( `${URLS.formulario}/actualizarejecutor/${formNo}`, ejecutor )
+        const { result, message, payload } = await actualizarFormulario<Ejecutor>( `${URLS.formulario}/actualizarejecutor/${form.no}`, ejecutor )
         
         if( !result ) {
             openErrorNotification( message )
@@ -50,15 +50,7 @@ export const EjecutorForm : React.FC<EjecutorFromProps> = ({ formNo, state, disp
             return;
         }
 
-        dispatch(            
-            {
-                type: Actions.save,
-                payload: {
-                    state: State.normal,
-                    object: ejecutor
-                } 
-            }
-        )
+        handleFormChange2( {...form, ejecutor} )
 
         openSuccessNotification('Se actualizó el ejecutor')   
         setLoading( false )
@@ -184,10 +176,7 @@ export const EjecutorForm : React.FC<EjecutorFromProps> = ({ formNo, state, disp
                 </LoadingButton> 
 
                 <Button
-                    onClick={ () => dispatch({type: Actions.cancel, payload: { 
-                        state: State.unregistered,
-                        object: state.object
-                    }}) }
+                    onClick={ goToCancel }
                 >
                     Cancelar
                 </Button>

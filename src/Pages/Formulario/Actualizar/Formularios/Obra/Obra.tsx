@@ -1,28 +1,29 @@
 import React, { useContext, useState } from 'react'
-import { Button, Checkbox, getAlertTitleUtilityClass, Grid, InputAdornment, MenuItem, Stack, TextField, Typography } from '@mui/material'
+import { Button, Checkbox, Grid, InputAdornment, Stack, TextField, Typography } from '@mui/material'
 import { LoadingButton } from '@mui/lab'
-import { Action, Actions, State, statePayload } from '../Types/ReducerTypes'
-import { EmptyObra, Obra } from '../../../../models/Formulario'
-import { URLSContext } from '../../../../context/URLs.context'
-import { actualizarFormulario } from '../../../../services/formularios'
-import { useNotification } from '../../../../hooks/useNotification'
+import { EmptyObra, Formulario, Obra } from '../../../../../models/Formulario'
+import { URLSContext } from '../../../../../context/URLs.context'
+import { actualizarFormulario } from '../../../../../services/formularios'
+import { useNotification } from '../../../../../hooks/useNotification'
 
 
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { APISelect } from '../../../../components/APISelect'
+import { APISelect } from '../../../../../components/APISelect'
+import { PisosSelect } from './PisosSelect'
 
 type ObraFromProps = {
-    formNo: number,
-    state: statePayload<Obra>,
-    dispatch: React.Dispatch<Action<Obra>>
+    form: Formulario,
+    handleFormChange2 : ( nuevo : Formulario ) => void,
+    goToNormal: () => void,
+    goToCancel: () => void
 }
 
-export const ObraForm : React.FC<ObraFromProps> = ({ formNo, state, dispatch }) => {
+export const ObraForm : React.FC<ObraFromProps> = ({ form, handleFormChange2, goToNormal, goToCancel }) => {
 
     const URLS = useContext( URLSContext );
     const { openErrorNotification, openSuccessNotification } = useNotification();
-    const [ obra, setObra ] = useState<Obra>( state.object === undefined ? {...EmptyObra} : {...state.object!} )
+    const [ obra, setObra ] = useState<Obra>( () => form.obra ? form.obra : {...EmptyObra });
     const [ loading, setLoading ] = useState<boolean>(false)
     
     const handleFormChange = ( e : React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> ) => {
@@ -30,7 +31,10 @@ export const ObraForm : React.FC<ObraFromProps> = ({ formNo, state, dispatch }) 
         setObra( { ...obra } )
     }
 
-    
+    const handleArrayChange = (name :string, stringList : string[]) => {
+        obra[name as 'niveles'] = [...stringList];
+        setObra({ ...obra });
+    }
     
     const handleCubicosChange = ( e : React.ChangeEvent<HTMLInputElement> ) => {
         obra.movimientoTierra = e.target.checked;
@@ -47,7 +51,7 @@ export const ObraForm : React.FC<ObraFromProps> = ({ formNo, state, dispatch }) 
     const registrarObra = async() => {
 
         setLoading( true )
-        const { result, message, payload } = await actualizarFormulario<Obra>( `${URLS.formulario}/actualizarobra/${formNo}`, obra )
+        const { result, message, payload } = await actualizarFormulario<Obra>( `${URLS.formulario}/actualizarobra/${form.no}`, obra )
         
         if( !result ) {
             openErrorNotification( message )
@@ -55,17 +59,9 @@ export const ObraForm : React.FC<ObraFromProps> = ({ formNo, state, dispatch }) 
             return;
         }
 
-        dispatch(            
-            {
-                type: Actions.save,
-                payload: {
-                    state: State.normal,
-                    object: obra
-                } 
-            }
-        )
+        handleFormChange2( {...form, obra} )
 
-        openSuccessNotification('Se actualizó el obra')   
+        openSuccessNotification('Se actualizó la obra')   
         setLoading( false )
     }
 
@@ -189,16 +185,11 @@ export const ObraForm : React.FC<ObraFromProps> = ({ formNo, state, dispatch }) 
                 }}
             /> 
 
-            <TextField 
-                size='small'
-                type='number'
-            
-                label="Nivel(es) y/o Piso(s)" 
+            <PisosSelect 
+                stringList={obra.niveles}
                 name='niveles'
-                variant="outlined" 
-                fullWidth
-                value={ obra.niveles }
-                onChange={ handleFormChange }
+                label='Nivele(s) y/ Piso(s)'
+                handleArrayChange={handleArrayChange}
             /> 
 
             <TextField 
@@ -238,10 +229,7 @@ export const ObraForm : React.FC<ObraFromProps> = ({ formNo, state, dispatch }) 
                 </LoadingButton> 
 
                 <Button
-                    onClick={ () => dispatch({type: Actions.cancel, payload: { 
-                        state: State.unregistered,
-                        object: state.object
-                    }}) }
+                    onClick={ goToCancel }
                 >
                     Cancelar
                 </Button>

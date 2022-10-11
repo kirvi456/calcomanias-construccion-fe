@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
-import { Typography, Divider, Grid, TextField, Stack, MenuItem } from '@mui/material'
+import { Typography, Divider, Grid, TextField, Stack, MenuItem, Checkbox } from '@mui/material'
 import { LoadingButton } from '@mui/lab'
 import { useNotification } from '../../hooks/useNotification'
 import AddIcon from '@mui/icons-material/Add';
 import { EmptyRubro, Rubro } from '../../models/Rubro'
 import { crearRubro } from '../../services/rubros'
 
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 type CrudCardHeaderProps = {
     title : string,
@@ -15,8 +17,8 @@ type CrudCardHeaderProps = {
 
 export const CrudCardHeader : React.FC<CrudCardHeaderProps> = ({ title, path, handleCreatedSuccess }) => {
 
-    const [ rubroNuevo, setNuevo ]       = useState<Rubro>(EmptyRubro);
-    const [ loading, setLoading ]   = useState<boolean>(false);
+    const [ rubroNuevo, setNuevo ]     = useState<Rubro>({...EmptyRubro});
+    const [ loading, setLoading ]      = useState<boolean>(false);
 
     const { openErrorNotification } = useNotification();
 
@@ -25,12 +27,18 @@ export const CrudCardHeader : React.FC<CrudCardHeaderProps> = ({ title, path, ha
         setNuevo( { ...rubroNuevo } );
     }
     
+    const handleCuadradosChange = ( e : React.ChangeEvent<HTMLInputElement> ) => {
+        rubroNuevo.unidad = e.target.checked;
+        if( !e.target.checked ) rubroNuevo.unidadDesc = 'sin-unidad';
+        else rubroNuevo.unidadDesc = 'mts';
+        setNuevo( { ...rubroNuevo } )
+    }
 
     const addOption = async () => {
         setLoading(true)
         const { result, message, payload } = await crearRubro( path, rubroNuevo );
         if( !result ) openErrorNotification( message );
-        else { handleCreatedSuccess( payload! ); setNuevo(EmptyRubro); }
+        else { handleCreatedSuccess( payload! ); setNuevo({ ...EmptyRubro }); }
         setLoading(false)
     }
 
@@ -66,21 +74,42 @@ export const CrudCardHeader : React.FC<CrudCardHeaderProps> = ({ title, path, ha
                             variant="outlined" 
                             fullWidth
                         />
-                        <TextField 
-                            select
-                            size='small'
-                            type='text'
-                            value={ rubroNuevo.unidad }
-                            onChange={ handleChange }
-                            label="Unidad"
-                            name='unidad' 
-                            variant="outlined" 
-                            fullWidth
-                        >
-                            <MenuItem value='mts'>Lineales</MenuItem>
-                            <MenuItem value='mts²'>Cuadrados</MenuItem>
-                            <MenuItem value='mts³'>Cúbicos</MenuItem>
-                        </TextField>
+                        
+
+
+                        <Grid container>
+                            <Grid item xs={2} md={1}>
+                                <Checkbox 
+                                    icon={<CheckCircleOutlinedIcon />} 
+                                    checkedIcon={<CheckCircleIcon />} 
+                                    value={ rubroNuevo.unidad }
+                                    onChange={ handleCuadradosChange }
+                                    name='demolicion'
+                                    checked={rubroNuevo.unidad}
+                                />
+                            </Grid>
+                            <Grid item xs={10} md={11}>
+                            <TextField 
+                                disabled={ !rubroNuevo.unidad }
+                                select
+                                size='small'
+                                type='text'
+                                value={ rubroNuevo.unidadDesc }
+                                onChange={ handleChange }
+                                label="Unidad"
+                                name='unidadDesc' 
+                                variant="outlined" 
+                                fullWidth
+                            >
+                                <MenuItem value='mts'>Lineales</MenuItem>
+                                <MenuItem value='mts²'>Cuadrados</MenuItem>
+                                <MenuItem value='mts³'>Cúbicos</MenuItem>
+                                <MenuItem value='sin-unidad'></MenuItem>
+                            </TextField>
+                            </Grid>
+                        </Grid>
+
+                        
                     </Stack>
                 </Grid>
                 

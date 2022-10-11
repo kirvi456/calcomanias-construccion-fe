@@ -14,7 +14,7 @@ export enum BarOptions {
 export type BarItem = {
     icon: JSX.Element,
     label: string,
-    component: JSX.Element,
+    component?: JSX.Element,
     selected: boolean,
     value:  BarOptions
 }

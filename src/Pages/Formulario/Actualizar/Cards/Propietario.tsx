@@ -1,46 +1,62 @@
-import React, { useReducer } from 'react'
-import { Formulario, Propietario } from '../../../../models/Formulario'
+import React, { useEffect, useState } from 'react'
+import { Formulario } from '../../../../models/Formulario'
 import { Button, Divider, IconButton, Paper, Tooltip, Typography } from '@mui/material'
 import { Stack } from '@mui/system'
-import { PropietarioReducer } from '../Reducers/Propietario'
-import { PropietarioActions, PropietatioState } from '../Types/Propietario'
 import { PropietarioForm } from '../Formularios/Propietario'
 
 import WarningIcon from '@mui/icons-material/Warning';
 import EditIcon from '@mui/icons-material/Edit';
+import { State } from '../Types/ReducerTypes'
 
 
 type PropietarioCardProps = {
-    formNo: number,
-    propietario : Propietario | undefined,
     icon: JSX.Element,
     label: string,
     form: Formulario,
-    setForm: React.Dispatch<React.SetStateAction<Formulario | undefined>>,
     handleFormChange : ( nuevo : Formulario ) => void
 }
 
 
-export const PropietarioCard : React.FC<PropietarioCardProps> = ({ formNo, propietario, form, setForm, handleFormChange, icon, label }) => {
+export const PropietarioCard : React.FC<PropietarioCardProps> = ({ form, handleFormChange, icon, label }) => {
 
+    const [ state, setState ] = useState<State>(form.propietario ? State.normal : State.unregistered );
+
+    const goToNormal = () => {
+        setState(State.normal);
+    }
     
-
-    const initFunc = () => {
-        console.log('propietario', propietario)
-        console.log('form.propietario', form.propietario)
-        return !propietario 
-            ? {state: PropietatioState.unregistered, propietario: undefined}
-            : {state: PropietatioState.normal, propietario}
+    const goToCancel = () => {
+        setState(form.propietario ? State.normal : State.unregistered);
     }
 
-    const initialState = {state: PropietatioState.unregistered, propietario: undefined}
-
-    const [state, dispatch] = useReducer(PropietarioReducer, initialState, initFunc)
-
+    useEffect(() => {
+        setState(form.propietario ? State.normal : State.unregistered)
+    }, [form])
 
     const getBody = () => {
-        switch( state.state ){
-            case PropietatioState.unregistered:
+
+        if(!form.propietario && state === State.normal ){
+            return <Stack
+                spacing={2}
+                alignItems='center'
+            >
+                <Stack alignItems='center'>
+                    <WarningIcon sx={{fontSize: 60}} />
+                    <Typography>
+                        Aún no se ha registrado un propietario
+                    </Typography>
+                </Stack>
+                <Button
+                    variant='contained'
+                    onClick={ () => setState(State.registering) }
+                >
+                    Registrar
+                </Button>
+            </Stack> 
+        }
+
+        switch( state ){
+            case State.unregistered:
                 return (
                     <Stack
                         spacing={2}
@@ -54,45 +70,45 @@ export const PropietarioCard : React.FC<PropietarioCardProps> = ({ formNo, propi
                         </Stack>
                         <Button
                             variant='contained'
-                            onClick={ () => dispatch({type: PropietarioActions.goregistering, payload: {state: PropietatioState.registering, propietario: state.propietario}}) }
+                            onClick={ () => setState(State.registering) }
                         >
                             Registrar
                         </Button>
                     </Stack> 
                 )
 
-            case PropietatioState.registering:
-                return (<PropietarioForm 
-                    formNo={formNo}
-                    state={state}
-                    dispatch={dispatch}
-                    form={form}
-                    setForm={setForm}
-                    handleFormChange2 ={handleFormChange}
-                />)
+            case State.registering:
+                return (
+                    <PropietarioForm 
+                        form={form}
+                        handleFormChange2 ={handleFormChange}
+                        goToNormal={goToNormal}
+                        goToCancel={goToCancel}
+                    />
+                )
 
-            case PropietatioState.normal:
+            case State.normal:
                 return (
                     <Stack sx={{position: 'relative'}} spacing={1}>
                         <Typography textAlign='justify'> 
-                            <strong>- Nombres: </strong>{state.propietario!.nombres} {state.propietario!.apellidos} 
+                            <strong>- Nombres: </strong>{form.propietario!.nombres} {form.propietario!.apellidos} 
                         </Typography>
                         <Typography textAlign='justify'> 
-                            <strong>- Dirección: </strong>{state.propietario!.direccion} 
+                            <strong>- Dirección: </strong>{form.propietario!.direccion} 
                         </Typography>
                         <Typography> 
-                            <strong>- DPI: </strong>{state.propietario!.dpi} ({state.propietario!.extendido}) 
+                            <strong>- DPI: </strong>{form.propietario!.dpi} ({form.propietario!.extendido}) 
                         </Typography>
                         <Typography> 
-                            <strong>- Email: </strong>{state.propietario!.email}
+                            <strong>- Email: </strong>{form.propietario!.email}
                         </Typography>
                         <Typography> 
-                            <strong>- Teléfonos: </strong>{state.propietario!.telefonos.join(', ')}
+                            <strong>- Teléfonos: </strong>{form.propietario!.telefonos.join(', ')}
                         </Typography >
                         <Tooltip title="Editar" sx={{position: 'absolute', bottom: 0, right: 0}}>
                             <IconButton 
                                 aria-label="editar"
-                                onClick={ () => dispatch({type: PropietarioActions.goregistering, payload: {state: PropietatioState.registering, propietario: state.propietario}}) }
+                                onClick={ () => setState(State.registering) }
                             >
                                 <EditIcon />
                             </IconButton>

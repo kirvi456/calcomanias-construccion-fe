@@ -26,149 +26,150 @@ import WaterIcon from '@mui/icons-material/Water';
 import ForestIcon from '@mui/icons-material/Forest';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import TextSnippetTwoToneIcon from '@mui/icons-material/TextSnippetTwoTone';
+import { CalcomaniaPDF3 } from './Formularios/Calcomania/CalcomaniaPDF3';
 
 type MenuProps = {
     form: Formulario,
-    setForm: React.Dispatch<React.SetStateAction<Formulario | undefined>>,
     handleFormChange : ( nuevo : Formulario ) => void
 }
 
 
-export const Menu : React.FC<MenuProps> = ({ form, setForm, handleFormChange }) => {
+export const Menu : React.FC<MenuProps> = ({ form, handleFormChange }) => {
 
     const [ options, setOptions ] = useState<BarItem[]>([
         {
             icon: <PersonIcon />,
             label: 'Propietario',
             value: BarOptions.propietario,
-            component: <PropietarioCard 
-                icon={<PersonIcon fontSize='large' />} 
-                label={'Propietario'}
-                formNo={ form.no }
-                propietario={ form.propietario }
-                form={form}
-                setForm={setForm}
-                handleFormChange={handleFormChange }
-                />,
             selected: true,
         },
         {
             icon: <HouseSidingIcon />,
             label: 'Inmueble',
             value: BarOptions.inmueble,
-            component: <InmuebleCard 
-                icon={<HouseSidingIcon fontSize='large'/>}
-                label={'Inmueble'}
-                formNo={form.no}
-                inmueble={ form.inmueble }
-            />,
             selected: false    
         },
         {
             icon: <ConstructionIcon />,
             label: 'Obra',
             value: BarOptions.obra,
-            component: <ObraCard 
-                icon={<ConstructionIcon fontSize='large' />}
-                label={'Obra'}
-                formNo={form.no}
-                obra={ form.obra }
-            />,
             selected: false    
         },
         {
             icon: <WaterIcon />,
             label: 'Servicios',
             value: BarOptions.servicios,
-            component: <ServiciosCard 
-                icon={<WaterIcon fontSize='large' />}
-                label={'Servicios'}
-                formNo={form.no}
-                servicios={ form.servicios }
-            />,
             selected: false    
         },
         {
             icon: <ForestIcon />,
             label: 'Tala',
             value: BarOptions.tala,
-            component: <TalaCard 
-                icon={<ForestIcon fontSize='large'  />}
-                label={'Tala'}
-                formNo={form.no}
-                tala={ form.tala }
-            />,
             selected: false    
         },
         {
             icon: <Person4Icon />,
             label: 'Ejecutor',
             value: BarOptions.ejecutor,
-            component: <EjecutorCard 
-                icon={<Person4Icon fontSize='large' />}
-                label={'Ejecutor'}
-                formNo={form.no}
-                ejecutor={ form.ejecutor }
-            />,
             selected: false    
         },
         {
             icon: <Person3Icon />,
             label: 'Planificador',
             value: BarOptions.planificador,
-            component: <PlanificadorCard
-                icon={<Person3Icon fontSize='large' />}
-                label={'Planificador'} 
-                formNo={form.no}
-                planificador={ form.planificador }
-            />,
             selected: false    
         },
         {
             icon: <ReceiptIcon />,
             label: 'Recibo',
             value: BarOptions.recibo,
-            component: <ReciboCard 
-                icon={<ReceiptIcon fontSize='large'  />}
-                label={'Recibo 7B'}
-                formNo={form.no}
-                recibo={ form.recibo }
-            />,
             selected: false    
         },
         {
             icon: <TextSnippetTwoToneIcon />,
             label: 'Calcomania',
             value: BarOptions.calcomania,
-            component: <CalcomaniaCard 
-                icon={<TextSnippetTwoToneIcon fontSize='large' />}
-                label={'Calcomania'}
-                formNo={form.no}
-                calcomania={ form.calcomania }
-                propietario={ form.propietario }
-                recibo={ form.recibo }
-                inmueble={ form.inmueble }
-            />,
             selected: false    
-        },
-        {
-            icon: <Person3Icon />,
-            label: 'Planificador',
-            value: BarOptions.planificador,
-            component: <PlanificadorCard
-                icon={<Person3Icon fontSize='large' />}
-                label={'Planificador'} 
-                formNo={form.no}
-                planificador={ form.planificador }
-            />,
-            selected: false    
-        },
+        }
     ])
     
     const handleSelect = ( optionSelect : BarOptions ) => {
         const nuevoSelected = options.map(el => ({ ...el, selected: el.value === optionSelect }) )
         console.log(nuevoSelected)
         setOptions([...nuevoSelected])
+    }
+
+
+    const getCard = () => {
+        const selected = options.find( el => el.selected )!.value;
+        switch( selected ){
+            case BarOptions.propietario : 
+                return <PropietarioCard 
+                    icon={<PersonIcon fontSize='large' />} 
+                    label={'Propietario'}
+                    form={form}
+                    handleFormChange={ handleFormChange }
+                />;
+            case BarOptions.inmueble : 
+                return <InmuebleCard 
+                    icon={<HouseSidingIcon fontSize='large'/>}
+                    label={'Inmueble'}
+                    form={form}
+                    handleFormChange={ handleFormChange }
+                />
+            case BarOptions.ejecutor : 
+                return <EjecutorCard 
+                    icon={<Person4Icon fontSize='large' />}
+                    label={'Ejecutor'}
+                    form={form}
+                    handleFormChange={ handleFormChange }
+                />
+            case BarOptions.obra : 
+                return <ObraCard 
+                    icon={<ConstructionIcon fontSize='large' />}
+                    label={'Obra'}
+                    form={form}
+                    handleFormChange={ handleFormChange }
+                />
+            case BarOptions.servicios : 
+                return <ServiciosCard 
+                    icon={<WaterIcon fontSize='large' />}
+                    label={'Servicios'}
+                    form={form}
+                    handleFormChange={ handleFormChange }
+                />
+            case BarOptions.tala : 
+                return <TalaCard 
+                    icon={<ForestIcon fontSize='large'  />}
+                    label={'Tala'}
+                    form={form}
+                    handleFormChange={ handleFormChange }
+                />
+            case BarOptions.planificador : 
+                return <PlanificadorCard
+                    icon={<Person3Icon fontSize='large'  />}
+                    label={'Planificador'}
+                    form={form}
+                    handleFormChange={ handleFormChange }
+                />
+            case BarOptions.recibo : 
+                return <ReciboCard 
+                    icon={<ReceiptIcon fontSize='large'  />}
+                    label={'Recibo 7B'}
+                    form={form}
+                    handleFormChange={ handleFormChange }
+                />
+            case BarOptions.calcomania : 
+                return form.calcomania 
+                ? <CalcomaniaPDF3 form={form} />
+                : <CalcomaniaCard 
+                    icon={<TextSnippetTwoToneIcon fontSize='large' />}
+                    label={'Calcomania'}
+                    form={form}
+                    handleFormChange={ handleFormChange }
+                />
+            default: return <></>
+        }
     }
 
     return (
@@ -200,9 +201,7 @@ export const Menu : React.FC<MenuProps> = ({ form, setForm, handleFormChange }) 
 
                 <MenuBar options={options} handleSelect={handleSelect} />
 
-                {
-                    options.find( el => el.selected )!.component
-                }
+                { getCard() }
 
             </Stack>
             

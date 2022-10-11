@@ -11,11 +11,12 @@ type CrudListItemProps = {
     path : string,
     no: string,
     desc: string,
-    unidad: string,
+    unidad: boolean,
+    unidadDesc: string,
     handleDeleteSuccess: (result : Rubro) => void
 }
 
-export const CrudListItem : React.FC<CrudListItemProps> = ({ _id, no, desc, unidad, path, handleDeleteSuccess }) => {
+export const CrudListItem : React.FC<CrudListItemProps> = ({ _id, no, desc, unidad, unidadDesc, path, handleDeleteSuccess }) => {
     
     const { openErrorNotification } = useNotification();
 
@@ -29,7 +30,7 @@ export const CrudListItem : React.FC<CrudListItemProps> = ({ _id, no, desc, unid
         <Paper sx={{ p: 1, mt: 1}}>
             <Stack direction='row' justifyContent='space-between' alignItems='center'>
                 <Typography>
-                    <strong>{ no }: </strong>{ desc } ({unidad})
+                    <strong>{ no }: </strong>{ desc } {unidad && `(${unidadDesc})`}
                 </Typography>
 
                 <Tooltip title='Borrar'>

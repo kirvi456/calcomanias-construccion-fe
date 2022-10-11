@@ -1,8 +1,7 @@
 import React, { useContext, useState } from 'react'
 import { Button, MenuItem, Stack, TextField } from '@mui/material'
 import { LoadingButton } from '@mui/lab'
-import { Action, Actions, State, statePayload } from '../Types/ReducerTypes'
-import { EmptyPlanificador, Planificador } from '../../../../models/Formulario'
+import { EmptyPlanificador, Formulario, Planificador } from '../../../../models/Formulario'
 import { URLSContext } from '../../../../context/URLs.context'
 import { actualizarFormulario } from '../../../../services/formularios'
 import { useNotification } from '../../../../hooks/useNotification'
@@ -12,16 +11,17 @@ import { APISelect } from '../../../../components/APISelect'
 import { StringList } from '../../../../components/StringList'
 
 type PlanificadorFromProps = {
-    formNo: number,
-    state: statePayload<Planificador>,
-    dispatch: React.Dispatch<Action<Planificador>>
+    form: Formulario,
+    handleFormChange2 : ( nuevo : Formulario ) => void,
+    goToNormal: () => void,
+    goToCancel: () => void
 }
 
-export const PlanificadorForm : React.FC<PlanificadorFromProps> = ({ formNo, state, dispatch }) => {
+export const PlanificadorForm : React.FC<PlanificadorFromProps> = ({ form, handleFormChange2, goToNormal, goToCancel }) => {
 
     const URLS = useContext( URLSContext );
     const { openErrorNotification, openSuccessNotification } = useNotification();
-    const [ planificador, setPlanificador ] = useState<Planificador>( state.object === undefined ? {...EmptyPlanificador} : {...state.object!} )
+    const [ planificador, setPlanificador ] = useState<Planificador>( () => form.planificador ? form.planificador : {...EmptyPlanificador });
     const [ loading, setLoading ] = useState<boolean>(false)
     
     const handleFormChange = ( e : React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> ) => {
@@ -42,7 +42,7 @@ export const PlanificadorForm : React.FC<PlanificadorFromProps> = ({ formNo, sta
     const registrarPlanificador = async() => {
 
         setLoading( true )
-        const { result, message, payload } = await actualizarFormulario<Planificador>( `${URLS.formulario}/actualizarplanificador/${formNo}`, planificador )
+        const { result, message } = await actualizarFormulario<Planificador>( `${URLS.formulario}/actualizarplanificador/${form.no}`, planificador )
         
         if( !result ) {
             openErrorNotification( message )
@@ -50,15 +50,7 @@ export const PlanificadorForm : React.FC<PlanificadorFromProps> = ({ formNo, sta
             return;
         }
 
-        dispatch(            
-            {
-                type: Actions.save,
-                payload: {
-                    state: State.normal,
-                    object: planificador
-                } 
-            }
-        )
+        handleFormChange2( {...form, planificador} )
 
         openSuccessNotification('Se actualizó el planificador')   
         setLoading( false )
@@ -184,10 +176,7 @@ export const PlanificadorForm : React.FC<PlanificadorFromProps> = ({ formNo, sta
                 </LoadingButton> 
 
                 <Button
-                    onClick={ () => dispatch({type: Actions.cancel, payload: { 
-                        state: State.unregistered,
-                        object: state.object
-                    }}) }
+                    onClick={ goToCancel }
                 >
                     Cancelar
                 </Button>
